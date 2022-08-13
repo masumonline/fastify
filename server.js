@@ -1,5 +1,9 @@
 // Require the framework and instantiate it
-const fastify = require("fastify")({ logger: true });
+const fastify = require("fastify")({ logger: false });
+
+fastify.register(require('@fastify/mysql'), {
+  connectionString: 'mysql://root:masumi@localhost:3306/fastify'
+})
 
 fastify.register(require("@fastify/swagger"), {
   exposeRoute: true,
@@ -21,6 +25,8 @@ fastify.register(require("@fastify/swagger"), {
 });
 
 fastify.register(require("../fastify/routers/photosRoute"));
+fastify.register(require("../fastify/routers/userRoute"));
+
 fastify.get("/", async (req, res) => {
   res.send({name: "hi there"});
 });

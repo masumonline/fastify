@@ -1,47 +1,33 @@
-const photos = require("../data/Photos");
-
-const photo = {
-  type: "object",
-  properties: {
-    albumId: { type: "number" },
-    id: { type: "number" },
-    title: { type: "string" },
-  },
-};
-
-const getPhotosOpts = {
-  schema: {
-    response: {
-      200: {
-        type: "array",
-        items: photo,
-      },
-    },
-  },
-  handler: (req, res) => {
-    res.send(photos);
-  },
-};
-
-const getPhotoOpts = {
-  schema: {
-    params: {
-      id: { type: 'number' }
-    },
-    response: {
-      200: photo,
-    },
-  },
-  handler: (req, res) => {
-    const { id } = req.params;
-    const photo = photos.find((photo) => photo.id == id);
-    res.send(photo);
-  },
-};
-
 function photoRoute(fastify, options, done) {
-  fastify.get("/photos", getPhotosOpts);
-  fastify.get("/photos/:id", getPhotoOpts);
+
+  fastify.get("/photos", (req, reply) => {
+    fastify.mysql.getConnection(onConnect);
+
+    function onConnect(err, client) {
+      if (err) return reply.send(err);
+
+      client.query("SELECT * FROM photos", function onResult(err, result) {
+        client.release();
+        reply.send(err || result);
+      });
+    }
+  });
+
+  fastify.get('/photos/:id', (req, reply) => {
+    fastify.mysql.getConnection(onConnect)
+
+    function onConnect (err, client) {
+      if (err) return reply.send(err)
+
+      client.query(
+        'SELECT * FROM photos WHERE id=?', [req.params.id],
+        function onResult (err, result) {
+          client.release()
+          reply.send(err || result)
+        }
+      )
+    }
+  });
   done();
 }
 
